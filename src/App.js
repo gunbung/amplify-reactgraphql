@@ -5,7 +5,7 @@ import { withAuthenticator } from '@aws-amplify/ui-react';
 import { listNotes } from './graphql/queries';
 import { createNote as createNoteMutation, deleteNote as deleteNoteMutation } from './graphql/mutations';
 
-const initialFormState = { name: '', description: '' }
+const initialFormState = { name: '', description: '', image: ''}
 
 function App() {
   const [notes, setNotes] = useState([]);
@@ -14,6 +14,14 @@ function App() {
   useEffect(() => {
     fetchNotes();
   }, []);
+  
+  async function onChange(e) {
+    if (!e.target.files[0]) return
+    const file = e.target.files[0];
+    setFormData({ ...formData, image: file.name });
+    await Storage.put(file.name, file);
+    fetchNotes();
+  }
 
   async function fetchNotes() {
     const apiData = await API.graphql({ query: listNotes });
@@ -43,14 +51,6 @@ function App() {
     const newNotesArray = notes.filter(note => note.id !== id);
     setNotes(newNotesArray);
     await API.graphql({ query: deleteNoteMutation, variables: { input: { id } }});
-  }
-  
-  async function onChange(e) {
-    if (!e.target.files[0]) return
-    const file = e.target.files[0];
-    setFormData({ ...formData, image: file.name });
-    await Storage.put(file.name, file);
-    fetchNotes();
   }
 
   return (
